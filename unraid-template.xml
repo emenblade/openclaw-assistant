@@ -14,7 +14,7 @@
   <WebUI>http://[IP]:[PORT:18789]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/emenblade/openclaw-assistant/main/unraid-template.xml</TemplateURL>
   <Icon>https://openclaw.ai/favicon.ico</Icon>
-  <ExtraParams>--init --user=1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --memory=1g --cpus=2 --tmpfs=/tmp</ExtraParams>
+  <ExtraParams>--init --user=1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --memory=1g --cpus=2 --tmpfs=/tmp --log-opt max-size=10m --log-opt max-file=3</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
