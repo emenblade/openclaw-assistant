@@ -16,6 +16,8 @@ services:
       ASSISTANT_NAME: ${ASSISTANT_NAME:-Assistant}
       QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
       OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
+      CITY: ${CITY:-}
+      WORK_HOURS: ${WORK_HOURS:-09:00-17:00}
     volumes:
       - ${OPENCLAW_APPDATA:-/mnt/cache/appdata/openclaw-assistant}:/home/node/.openclaw
       - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/.openclaw/workspace/obsidian
@@ -53,6 +55,8 @@ services:
       ASSISTANT_NAME: ${ASSISTANT_NAME:-Assistant}
       QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
       OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
+      CITY: ${CITY:-}
+      WORK_HOURS: ${WORK_HOURS:-09:00-17:00}
     volumes:
       - ${OPENCLAW_APPDATA:-/mnt/cache/appdata/openclaw-assistant}:/home/node/.openclaw
       - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/.openclaw/workspace/obsidian

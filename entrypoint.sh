@@ -14,6 +14,15 @@ OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-$WORKSPACE/obsidian}"
 HIMALAYA_CONFIG="${HIMALAYA_CONFIG:-$STATE_DIR/himalaya/config.toml}"
 GOG_HOME="${GOG_HOME:-$STATE_DIR/gog}"
 
+# Values consumed by the seeded prompts.
+export TIMEZONE="${TZ:-UTC}"
+export WORK_HOURS="${WORK_HOURS:-09:00-17:00}"
+export CITY="${CITY:-}"
+export QUIET_HOURS="${QUIET_HOURS:-22:00-07:00}"
+export OWNER_NAME="${OWNER_NAME:-Owner}"
+export ASSISTANT_NAME="${ASSISTANT_NAME:-Assistant}"
+export OBSIDIAN_SUBDIR="${OBSIDIAN_SUBDIR:-Assistant}"
+
 mkdir -p \
   "$STATE_DIR" \
   "$STATE_DIR/auth-profile-secrets" \

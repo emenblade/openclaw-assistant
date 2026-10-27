@@ -55,6 +55,8 @@
   <Config Name="Assistant Name" Target="ASSISTANT_NAME" Default="Assistant" Mode="" Description="Name the assistant uses." Type="Variable" Display="always" Required="false" Mask="false">Assistant</Config>
 
   <Config Name="Quiet Hours" Target="QUIET_HOURS" Default="22:00-07:00" Mode="" Description="Owner local quiet hours. Urgent/VIP may bypass." Type="Variable" Display="always" Required="false" Mask="false">22:00-07:00</Config>
+  <Config Name="City" Target="CITY" Default="" Mode="" Description="Optional city for the owner profile." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Work Hours" Target="WORK_HOURS" Default="09:00-17:00" Mode="" Description="Owner working hours for scheduling." Type="Variable" Display="always" Required="false" Mask="false">09:00-17:00</Config>
 
   <Config Name="Obsidian Subfolder" Target="OBSIDIAN_SUBDIR" Default="Assistant" Mode="" Description="Subfolder inside the vault for assistant notes." Type="Variable" Display="always" Required="false" Mask="false">Assistant</Config>
 
