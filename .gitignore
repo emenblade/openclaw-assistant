@@ -1,0 +1,9 @@
+.env
+google/
+client_secret.json
+service-account.json
+*.pem
+*.key
+*.p8
+config.toml
+creds.json

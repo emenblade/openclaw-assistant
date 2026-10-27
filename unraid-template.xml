@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>openclaw-assistant</Name>
+  <Repository>ghcr.io/emenblade/openclaw-assistant:latest</Repository>
+  <Registry>https://github.com/emenblade/openclaw-assistant/pkgs/container/openclaw-assistant</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/emenblade/openclaw-assistant/issues</Support>
+  <Project>https://github.com/emenblade/openclaw-assistant</Project>
+  <Overview>Private OpenClaw assistant for Unraid. Discord for text/notifications; OpenClaw Android/Wear OS app for voice; Gmail IMAP and Google Calendar via gog; Obsidian notes. Intended for access over WireGuard. No Docker socket, no privileged mode.</Overview>
+  <Category>AI: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:18789]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/emenblade/openclaw-assistant/main/unraid-template.xml</TemplateURL>
+  <Icon>https://openclaw.ai/favicon.ico</Icon>
+  <ExtraParams>--init --user=1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --memory=1g --cpus=2 --tmpfs=/tmp</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Dedicated Google account and Gmail app password; Google Calendar API/OAuth client; Discord bot application; OpenCode Zen API key. Appdata must be on the cache pool or a direct disk, not /mnt/user. Do not add the Docker socket.</Requires>
+
+  <Config Name="Appdata" Target="/home/node/.openclaw" Default="/mnt/cache/appdata/openclaw-assistant" Mode="rw" Description="OpenClaw state, SQLite, memory, credentials. Use cache pool/direct disk, not /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant</Config>
+
+  <Config Name="Obsidian Vault" Target="/home/node/.openclaw/workspace/obsidian" Default="/mnt/user/Obsidian/YourVault" Mode="rw" Description="Select your Obsidian vault root. The assistant writes under the Assistant subfolder. Must be writable by UID 1000." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/Obsidian/YourVault</Config>
+
+  <Config Name="Google Credentials" Target="/home/node/google" Default="/mnt/cache/appdata/openclaw-assistant/google" Mode="ro" Description="Folder containing client_secret.json from a Google Desktop OAuth client. Mounted read-only." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant/google</Config>
+
+  <Config Name="Gateway Token" Target="OPENCLAW_GATEWAY_TOKEN" Default="" Mode="" Description="Long random token. Generate with: openssl rand -hex 32" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+
+  <Config Name="OpenCode API Key" Target="OPENCODE_API_KEY" Default="" Mode="" Description="OpenCode Zen API key." Type="Variable" Display="always" Required="true" Mask="true"></Config>
+
+  <Config Name="Discord Bot Token" Target="DISCORD_BOT_TOKEN" Default="" Mode="" Description="Token for a NEW OpenClaw Discord bot application. Do not reuse an existing Red bot token." Type="Variable" Display="always" Required="true" Mask="true"></Config>
+
+  <Config Name="Discord Owner ID" Target="DISCORD_OWNER_ID" Default="" Mode="" Description="Your Discord user ID. Enable Developer Mode, right-click your avatar, Copy User ID." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+
+  <Config Name="Discord Guild ID" Target="DISCORD_GUILD_ID" Default="" Mode="" Description="Optional private Discord server/guild ID." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+
+  <Config Name="Discord Channel ID" Target="DISCORD_CHANNEL_ID" Default="" Mode="" Description="Optional dedicated #assistant channel ID." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+
+  <Config Name="Assistant Email" Target="ASSISTANT_EMAIL" Default="" Mode="" Description="Dedicated Google account email, e.g. assistant.you@gmail.com." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+
+  <Config Name="Gmail App Password" Target="GMAIL_APP_PASSWORD" Default="" Mode="" Description="Google app password for IMAP/SMTP. Not the account password." Type="Variable" Display="always" Required="true" Mask="true"></Config>
+
+  <Config Name="Assistant Calendar ID" Target="ASSISTANT_CALENDAR_ID" Default="" Mode="" Description="Google Calendar ID, e.g. abc123@group.calendar.google.com." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+
+  <Config Name="Gog Keyring Password" Target="GOG_KEYRING_PASSWORD" Default="" Mode="" Description="Password for gog's file keyring. Store in your password manager." Type="Variable" Display="always" Required="true" Mask="true"></Config>
+
+  <Config Name="Timezone" Target="TZ" Default="America/Toronto" Mode="" Description="IANA timezone." Type="Variable" Display="always" Required="true" Mask="false">America/Toronto</Config>
+
+  <Config Name="Owner Name" Target="OWNER_NAME" Default="" Mode="" Description="Your name for prompts and notifications." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+
+  <Config Name="Assistant Name" Target="ASSISTANT_NAME" Default="Assistant" Mode="" Description="Name the assistant uses." Type="Variable" Display="always" Required="false" Mask="false">Assistant</Config>
+
+  <Config Name="Quiet Hours" Target="QUIET_HOURS" Default="22:00-07:00" Mode="" Description="Owner local quiet hours. Urgent/VIP may bypass." Type="Variable" Display="always" Required="false" Mask="false">22:00-07:00</Config>
+
+  <Config Name="Obsidian Subfolder" Target="OBSIDIAN_SUBDIR" Default="Assistant" Mode="" Description="Subfolder inside the vault for assistant notes." Type="Variable" Display="always" Required="false" Mask="false">Assistant</Config>
+
+  <Config Name="WebUI Port" Target="18789" Default="18789" Mode="tcp" Description="OpenClaw HTTP/WebSocket port. Reachable over WireGuard; do not port-forward publicly." Type="Port" Display="always" Required="true" Mask="false">18789</Config>
+</Container>

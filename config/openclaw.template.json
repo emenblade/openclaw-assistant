@@ -1,0 +1,71 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan",
+    "port": 18789,
+    "auth": {
+      "mode": "token"
+    }
+  },
+  "session": {
+    "dmScope": "main"
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "/home/node/.openclaw/workspace",
+      "model": {
+        "primary": "opencode/claude-haiku-5-5",
+        "fallbacks": [
+          "opencode/gpt-6-luna",
+          "opencode/qwen3.8-flash"
+        ]
+      }
+    }
+  },
+  "channels": {
+    "discord": {
+      "enabled": true,
+      "token": "${DISCORD_BOT_TOKEN}",
+      "dmPolicy": "allowlist",
+      "allowFrom": [
+        "${DISCORD_OWNER_ID}"
+      ],
+      "groupPolicy": "disabled"
+    }
+  },
+  "tools": {
+    "profile": "coding",
+    "allow": [
+      "read",
+      "write",
+      "exec",
+      "message",
+      "cron"
+    ],
+    "deny": [
+      "group:web",
+      "browser",
+      "gateway",
+      "nodes"
+    ],
+    "fs": {
+      "workspaceOnly": true
+    },
+    "exec": {
+      "mode": "allowlist"
+    },
+    "agentToAgent": {
+      "enabled": false
+    }
+  },
+  "memory": {
+    "search": {
+      "provider": "none"
+    }
+  },
+  "discovery": {
+    "mdns": {
+      "mode": "off"
+    }
+  }
+}

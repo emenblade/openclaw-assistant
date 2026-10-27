@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# Scoped mail/calendar/notes wrapper for the OpenClaw assistant.
+#
+# The main agent is allowlisted to run only this executable. It deliberately
+# exposes no send, reply, delete-mail, move-mail, or arbitrary shell operations.
+
+set -euo pipefail
+
+: "${ASSISTANT_CALENDAR_ID:?ASSISTANT_CALENDAR_ID is required}"
+: "${ASSISTANT_EMAIL:?ASSISTANT_EMAIL is required}"
+HIMALAYA_ACCOUNT="${HIMALAYA_ACCOUNT:-assistant}"
+GOG_ACCOUNT="${GOG_ACCOUNT:-$ASSISTANT_EMAIL}"
+OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-/home/node/.openclaw/workspace/obsidian}"
+OBSIDIAN_SUBDIR="${OBSIDIAN_SUBDIR:-Assistant}"
+
+usage() {
+  cat >&2 <<'EOF'
+Usage:
+  assistant-mail list [--limit N]
+  assistant-mail read <message-id>
+  assistant-mail calendar-list <from-iso> <to-iso>
+  assistant-mail calendar-create <json-file>
+  assistant-mail calendar-delete <event-id>
+  assistant-mail notes-append <relative-path> <content-file>
+  assistant-mail notes-read <relative-path>
+  assistant-mail notes-search <query>
+
+calendar-create JSON fields:
+  summary, from, to, timezone (optional), description (optional),
+  location (optional), all_day (optional boolean)
+EOF
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+
+case "$cmd" in
+  list)
+    limit=25
+    if [[ "${1:-}" == "--limit" ]]; then
+      limit="${2:?missing limit}"
+    fi
+    himalaya envelope list \
+      --account "$HIMALAYA_ACCOUNT" \
+      --page-size "$limit" \
+      --has-attachment \
+      --json
+    ;;
+
+  read)
+    [[ $# -eq 1 ]] || usage
+    himalaya message read \
+      --account "$HIMALAYA_ACCOUNT" \
+      --json \
+      "$1"
+    ;;
+
+  calendar-list)
+    [[ $# -eq 2 ]] || usage
+    gog --account "$GOG_ACCOUNT" calendar events \
+      "$ASSISTANT_CALENDAR_ID" \
+      --from "$1" \
+      --to "$2" \
+      --json
+    ;;
+
+  calendar-create)
+    [[ $# -eq 1 ]] || usage
+    command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
+    payload="$(cat "$1")"
+
+    summary="$(jq -r '.summary // empty' <<<"$payload")"
+    from="$(jq -r '.from // empty' <<<"$payload")"
+    to="$(jq -r '.to // empty' <<<"$payload")"
+    timezone="$(jq -r '.timezone // env.TZ // "UTC"' <<<"$payload")"
+    description="$(jq -r '.description // empty' <<<"$payload")"
+    location="$(jq -r '.location // empty' <<<"$payload")"
+    all_day="$(jq -r '.all_day // false' <<<"$payload")"
+
+    [[ -n "$summary" && -n "$from" && -n "$to" ]] || {
+      echo "calendar-create requires summary, from, and to" >&2
+      exit 1
+    }
+
+    args=(
+      --summary "$summary"
+      --from "$from"
+      --to "$to"
+      --timezone "$timezone"
+      --no-input
+      --json
+    )
+    [[ -n "$description" ]] && args+=(--description "$description")
+    [[ -n "$location" ]] && args+=(--location "$location")
+    [[ "$all_day" == "true" ]] && args+=(--all-day)
+
+    gog --account "$GOG_ACCOUNT" calendar create \
+      "$ASSISTANT_CALENDAR_ID" \
+      "${args[@]}"
+    ;;
+
+  calendar-delete)
+    [[ $# -eq 1 ]] || usage
+    gog --account "$GOG_ACCOUNT" calendar delete \
+      "$ASSISTANT_CALENDAR_ID" \
+      "$1" \
+      --force \
+      --no-input \
+      --json
+    ;;
+
+  notes-append)
+    [[ $# -eq 2 ]] || usage
+    rel="$1"
+    content_file="$2"
+
+    case "$rel" in
+      /*|*..*) echo "notes-append path must be relative and may not contain .." >&2; exit 1 ;;
+    esac
+
+    dir="$OBSIDIAN_ROOT/$OBSIDIAN_SUBDIR"
+    target="$dir/$rel"
+    mkdir -p "$(dirname "$target")"
+    cat "$content_file" >> "$target"
+    printf '{"ok":true,"path":"%s"}\n' "$target"
+    ;;
+
+  notes-read)
+    [[ $# -eq 1 ]] || usage
+    rel="$1"
+
+    case "$rel" in
+      /*|*..*) echo "notes-read path must be relative and may not contain .." >&2; exit 1 ;;
+    esac
+
+    target="$OBSIDIAN_ROOT/$OBSIDIAN_SUBDIR/$rel"
+    [[ -f "$target" ]] || { echo "note not found" >&2; exit 1; }
+    cat "$target"
+    ;;
+
+  notes-search)
+    [[ $# -eq 1 ]] || usage
+    query="$1"
+
+    # Search only the assistant notes folder. No shell interpolation.
+    rg -n --no-heading --glob '*.md' --max-count 50 -- "$query" \
+      "$OBSIDIAN_ROOT/$OBSIDIAN_SUBDIR" || true
+    ;;
+
+  *)
+    usage
+    ;;
+esac

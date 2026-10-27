@@ -1,0 +1,64 @@
+services:
+  openclaw:
+    build:
+      context: .
+    image: ${OPENCLAW_IMAGE:-openclaw-assistant:local}
+    container_name: openclaw-assistant
+    init: true
+    user: "1000:1000"
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-UTC}
+      OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-lan}
+      OPENCLAW_GATEWAY_PORT: "18789"
+      OWNER_NAME: ${OWNER_NAME:-Owner}
+      ASSISTANT_NAME: ${ASSISTANT_NAME:-Assistant}
+      QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
+      OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
+    volumes:
+      - ${OPENCLAW_APPDATA:-/mnt/cache/appdata/openclaw-assistant}:/home/node/.openclaw
+      - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/.openclaw/workspace/obsidian
+      - ${GOOGLE_CREDENTIALS_DIR:-./google}:/home/node/google:ro
+    ports:
+      - "18789:18789"
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: ${MEMORY_LIMIT:-1g}
+    cpus: "2.0"
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-openclaw-assistant:local}
+    profiles:
+      - cli
+    network_mode: "service:openclaw"
+    init: true
+    user: "1000:1000"
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-UTC}
+      OWNER_NAME: ${OWNER_NAME:-Owner}
+      ASSISTANT_NAME: ${ASSISTANT_NAME:-Assistant}
+      QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
+      OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
+    volumes:
+      - ${OPENCLAW_APPDATA:-/mnt/cache/appdata/openclaw-assistant}:/home/node/.openclaw
+      - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/.openclaw/workspace/obsidian
+      - ${GOOGLE_CREDENTIALS_DIR:-./google}:/home/node/google:ro
+    entrypoint: ["node", "dist/index.js"]
+    stdin_open: true
+    tty: true
+    depends_on:
+      - openclaw
