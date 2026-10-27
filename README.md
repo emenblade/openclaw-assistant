@@ -204,11 +204,7 @@ docker exec -it openclaw-assistant assistant-mail calendar-list \
 Create a test event:
 
 ```bash
-docker exec -it openclaw-assistant gog calendar create "$ASSISTANT_CALENDAR_ID" \
-  --summary "OpenClaw test" \
-  --from 2026-11-01T15:00:00Z \
-  --to 2026-11-01T15:30:00Z \
-  --description "Created by setup test"
+docker exec -it openclaw-assistant sh -lc 'gog calendar create "$ASSISTANT_CALENDAR_ID" --summary "OpenClaw test" --from 2026-11-01T15:00:00Z --to 2026-11-01T15:30:00Z --description "Created by setup test"' 
 ```
 
 Then ask the assistant in Discord:
