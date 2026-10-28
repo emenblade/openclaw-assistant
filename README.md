@@ -27,7 +27,24 @@ OpenClaw has the only official Android + Wear OS experience with a watch Tile/Ta
 - Google Cloud project with Calendar API and a Desktop OAuth client
 - Discord bot application (new bot, not an existing Red bot token)
 - OpenCode Zen API key
+- Optional primary model override (`PRIMARY_MODEL`; default `opencode/claude-haiku-5-5`)
 - Obsidian vault path
+
+## Model selection
+
+The default is `opencode/claude-haiku-5-5`. You can set `PRIMARY_MODEL` in the template or `.env` to any OpenClaw model ref, for example:
+
+- `opencode/claude-haiku-5-5` (recommended cheap default)
+- `opencode/deepseek-v4.1-flash` (paid)
+- `opencode/glm-5.3-flash` (paid, cheap)
+- `opencode/gpt-6-luna` (paid, cheap)
+
+Avoid `*-free` models for unattended automation. OpenClaw is not the OpenCode client, and free-tier routes may return `403 FreeTierError`. If you change the model after first boot, run:
+
+```bash
+docker exec -it openclaw-assistant openclaw config set agents.defaults.model.primary "opencode/..."
+docker restart openclaw-assistant
+```
 
 ## Quick start
 
@@ -90,6 +107,7 @@ Fill in:
 - Google credentials folder
 - Gateway token (`openssl rand -hex 32`)
 - OpenCode Zen API key
+- Optional primary model override (`PRIMARY_MODEL`; default `opencode/claude-haiku-5-5`)
 - Discord bot token
 - Discord owner ID
 - Optional Discord guild/channel IDs

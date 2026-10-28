@@ -16,6 +16,7 @@ services:
       ASSISTANT_NAME: ${ASSISTANT_NAME:-Assistant}
       QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
       OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
+      PRIMARY_MODEL: ${PRIMARY_MODEL:-opencode/claude-haiku-5-5}
       CITY: ${CITY:-}
       WORK_HOURS: ${WORK_HOURS:-09:00-17:00}
     volumes:
@@ -55,6 +56,7 @@ services:
       ASSISTANT_NAME: ${ASSISTANT_NAME:-Assistant}
       QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
       OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
+      PRIMARY_MODEL: ${PRIMARY_MODEL:-opencode/claude-haiku-5-5}
       CITY: ${CITY:-}
       WORK_HOURS: ${WORK_HOURS:-09:00-17:00}
     volumes:

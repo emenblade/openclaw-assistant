@@ -28,6 +28,11 @@ const discordEnabled =
   Boolean(process.env.DISCORD_BOT_TOKEN) &&
   Boolean(process.env.DISCORD_OWNER_ID);
 
+const primaryModel = (process.env.PRIMARY_MODEL || "").trim();
+if (primaryModel) {
+  config.agents.defaults.model.primary = primaryModel;
+}
+
 if (!discordEnabled) {
   config.channels.discord.enabled = false;
   delete config.channels.discord.token;

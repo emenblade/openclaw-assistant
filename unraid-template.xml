@@ -31,6 +31,7 @@
   <Config Name="Gateway Token" Target="OPENCLAW_GATEWAY_TOKEN" Default="" Mode="" Description="Long random token. Generate with: openssl rand -hex 32" Type="Variable" Display="always" Required="true" Mask="true"></Config>
 
   <Config Name="OpenCode API Key" Target="OPENCODE_API_KEY" Default="" Mode="" Description="OpenCode Zen API key." Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="Primary Model" Target="PRIMARY_MODEL" Default="opencode/claude-haiku-5-5" Mode="" Description="OpenClaw model ref. Recommended: opencode/claude-haiku-5-5. Other paid options: opencode/deepseek-v4.1-flash, opencode/glm-5.3-flash. Free models may return 403 outside the OpenCode client." Type="Variable" Display="always" Required="false" Mask="false">opencode/claude-haiku-5-5</Config>
 
   <Config Name="Discord Bot Token" Target="DISCORD_BOT_TOKEN" Default="" Mode="" Description="Token for a NEW OpenClaw Discord bot application. Do not reuse an existing Red bot token." Type="Variable" Display="always" Required="true" Mask="true"></Config>
 
