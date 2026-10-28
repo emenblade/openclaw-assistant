@@ -1,8 +1,8 @@
 # OpenClaw assistant for Unraid.
 #
-# Adds gog (Google Workspace CLI), Himalaya (IMAP/SMTP), ffmpeg, jq, and a
-# scoped mail/calendar/notes wrapper. Runs as the base image's non-root node
-# user (UID/GID 1000).
+# Adds Himalaya (IMAP/SMTP), ffmpeg, jq, ripgrep, a service-account Google
+# Calendar CLI, and a scoped mail/calendar/notes wrapper. Runs as the base
+# image's non-root node user (UID/GID 1000).
 #
 # Build:
 #   docker build -t openclaw-assistant:local .
@@ -14,9 +14,7 @@ FROM ${OPENCLAW_IMAGE}
 
 USER root
 
-ARG GOG_VERSION=0.47.0
 ARG HIMALAYA_VERSION=2.2.1
-ARG GOG_SHA256=c3ed94efca90c754cdda300e3c7f8cc2f3d7df86d3fdc5d11f996c7518a09c24
 ARG HIMALAYA_SHA256=5c5ba2724c162f82d0a0c71b6c03224ed44f8bef7b14ace5da0635d3af2665a0
 ARG TARGETARCH=amd64
 
@@ -36,18 +34,6 @@ RUN set -eux; \
       tar; \
     rm -rf /var/lib/apt/lists/*
 
-# gog (Google Workspace CLI)
-RUN set -eux; \
-    mkdir -p /tmp/gog; \
-    curl -fsSL \
-      "https://github.com/openclaw/gogcli/releases/download/v${GOG_VERSION}/gogcli_${GOG_VERSION}_linux_amd64.tar.gz" \
-      -o /tmp/gog.tgz; \
-    echo "${GOG_SHA256}  /tmp/gog.tgz" | sha256sum -c -; \
-    tar --no-same-owner --no-same-permissions -xzf /tmp/gog.tgz -C /tmp/gog; \
-    install -m 0755 /tmp/gog/gog /usr/local/bin/gog; \
-    rm -rf /tmp/gog /tmp/gog.tgz; \
-    gog --version
-
 # Himalaya (IMAP/SMTP)
 RUN set -eux; \
     mkdir -p /tmp/himalaya; \
@@ -60,9 +46,10 @@ RUN set -eux; \
     rm -rf /tmp/himalaya /tmp/himalaya.tgz; \
     himalaya --version
 
-# Scoped mail/calendar/notes wrapper. This is the only executable the main
-# agent is allowlisted to run.
+# Scoped wrapper + service-account Calendar CLI. These are the only
+# assistant-facing executables for mail/calendar/notes.
 COPY assistant-mail /usr/local/bin/assistant-mail
+COPY gcal.mjs /usr/local/bin/gcal
 COPY entrypoint.sh /usr/local/bin/assistant-entrypoint.sh
 COPY render-config.mjs /opt/assistant/render-config.mjs
 COPY render-file.mjs /opt/assistant/render-file.mjs
@@ -72,6 +59,7 @@ COPY seed /opt/assistant/seed
 
 RUN chmod 0755 \
       /usr/local/bin/assistant-mail \
+      /usr/local/bin/gcal \
       /usr/local/bin/assistant-entrypoint.sh \
       /opt/assistant/render-himalaya.sh; \
     chmod 0644 \
@@ -94,12 +82,12 @@ ENV HOME=/home/node \
     OPENCLAW_GATEWAY_PORT=18789 \
     OPENCLAW_GATEWAY_BIND=lan \
     OPENCLAW_DISABLE_BONJOUR=1 \
-    GOG_HOME=/home/node/.openclaw/gog \
+    GOOGLE_SERVICE_ACCOUNT_JSON=/home/node/google/service-account.json \
     HIMALAYA_CONFIG=/home/node/.openclaw/himalaya/config.toml \
     OBSIDIAN_ROOT=/home/node/.openclaw/workspace/obsidian \
     XDG_CACHE_HOME=/home/node/.openclaw/cache \
     NPM_CONFIG_CACHE=/home/node/.openclaw/npm-cache \
-    PATH=/home/node/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/home/node/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 EXPOSE 18789
 

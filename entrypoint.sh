@@ -12,7 +12,7 @@ CONFIG_PATH="${OPENCLAW_CONFIG_PATH:-$STATE_DIR/openclaw.json}"
 WORKSPACE="${OPENCLAW_WORKSPACE_DIR:-$STATE_DIR/workspace}"
 OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-$WORKSPACE/obsidian}"
 HIMALAYA_CONFIG="${HIMALAYA_CONFIG:-$STATE_DIR/himalaya/config.toml}"
-GOG_HOME="${GOG_HOME:-$STATE_DIR/gog}"
+SERVICE_ACCOUNT_JSON="${GOOGLE_SERVICE_ACCOUNT_JSON:-/home/node/google/service-account.json}"
 
 # Values consumed by the seeded prompts.
 export TIMEZONE="${TZ:-UTC}"
@@ -29,7 +29,6 @@ mkdir -p \
   "$STATE_DIR/cache" \
   "$STATE_DIR/npm-cache" \
   "$STATE_DIR/himalaya" \
-  "$GOG_HOME" \
   "$WORKSPACE" \
   "$OBSIDIAN_ROOT/Assistant/Inbox" \
   "$OBSIDIAN_ROOT/Assistant/Daily" \
@@ -80,22 +79,17 @@ if [ -n "${GMAIL_APP_PASSWORD:-}" ] && [ ! -f "$HIMALAYA_CONFIG" ]; then
   /opt/assistant/render-himalaya.sh
 fi
 
-# --- gog (non-interactive setup only) ---------------------------------------
-if [ -n "${GOG_KEYRING_PASSWORD:-}" ] && [ ! -f "$STATE_DIR/.gog-keyring-initialized" ]; then
-  if gog auth keyring file >/dev/null 2>&1; then
-    touch "$STATE_DIR/.gog-keyring-initialized"
+# --- Google Calendar service account ----------------------------------------
+if [ -f "$SERVICE_ACCOUNT_JSON" ] && [ -n "${ASSISTANT_CALENDAR_ID:-}" ]; then
+  if gcal list       --from "$(date -u +%Y-%m-%dT%H:%M:%SZ)"       --to "$(date -u -d '+1 day' +%Y-%m-%dT%H:%M:%SZ)" >/dev/null 2>&1; then
+    echo "[entrypoint] Google Calendar access OK."
   else
-    echo "[entrypoint] WARNING: could not initialize gog file keyring." >&2
+    echo "[entrypoint] WARNING: Google Calendar check failed. Confirm the calendar is shared with the service-account email." >&2
   fi
-fi
-
-if [ -f /home/node/google/client_secret.json ] && [ ! -f "$STATE_DIR/.gog-credentials-initialized" ]; then
-  if gog auth credentials /home/node/google/client_secret.json >/dev/null 2>&1; then
-    touch "$STATE_DIR/.gog-credentials-initialized"
-    echo "[entrypoint] Loaded Google OAuth client credentials."
-  else
-    echo "[entrypoint] WARNING: could not load Google OAuth client credentials." >&2
-  fi
+elif [ -f /home/node/google/client_secret.json ]; then
+  echo "[entrypoint] WARNING: client_secret.json is an OAuth client, not a service-account key. This build expects service-account.json." >&2
+else
+  echo "[entrypoint] WARNING: Google service-account JSON not found at $SERVICE_ACCOUNT_JSON." >&2
 fi
 
 # --- Doctor + scoped exec allowlist -----------------------------------------

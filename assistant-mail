@@ -9,7 +9,6 @@ set -euo pipefail
 : "${ASSISTANT_CALENDAR_ID:?ASSISTANT_CALENDAR_ID is required}"
 : "${ASSISTANT_EMAIL:?ASSISTANT_EMAIL is required}"
 HIMALAYA_ACCOUNT="${HIMALAYA_ACCOUNT:-assistant}"
-GOG_ACCOUNT="${GOG_ACCOUNT:-$ASSISTANT_EMAIL}"
 OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-/home/node/.openclaw/workspace/obsidian}"
 OBSIDIAN_SUBDIR="${OBSIDIAN_SUBDIR:-Assistant}"
 
@@ -58,56 +57,17 @@ case "$cmd" in
 
   calendar-list)
     [[ $# -eq 2 ]] || usage
-    gog --account "$GOG_ACCOUNT" calendar events \
-      "$ASSISTANT_CALENDAR_ID" \
-      --from "$1" \
-      --to "$2" \
-      --json
+    gcal list --from "$1" --to "$2"
     ;;
 
   calendar-create)
     [[ $# -eq 1 ]] || usage
-    command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
-    payload="$(cat "$1")"
-
-    summary="$(jq -r '.summary // empty' <<<"$payload")"
-    from="$(jq -r '.from // empty' <<<"$payload")"
-    to="$(jq -r '.to // empty' <<<"$payload")"
-    timezone="$(jq -r '.timezone // env.TZ // "UTC"' <<<"$payload")"
-    description="$(jq -r '.description // empty' <<<"$payload")"
-    location="$(jq -r '.location // empty' <<<"$payload")"
-    all_day="$(jq -r '.all_day // false' <<<"$payload")"
-
-    [[ -n "$summary" && -n "$from" && -n "$to" ]] || {
-      echo "calendar-create requires summary, from, and to" >&2
-      exit 1
-    }
-
-    args=(
-      --summary "$summary"
-      --from "$from"
-      --to "$to"
-      --timezone "$timezone"
-      --no-input
-      --json
-    )
-    [[ -n "$description" ]] && args+=(--description "$description")
-    [[ -n "$location" ]] && args+=(--location "$location")
-    [[ "$all_day" == "true" ]] && args+=(--all-day)
-
-    gog --account "$GOG_ACCOUNT" calendar create \
-      "$ASSISTANT_CALENDAR_ID" \
-      "${args[@]}"
+    gcal create "$1"
     ;;
 
   calendar-delete)
     [[ $# -eq 1 ]] || usage
-    gog --account "$GOG_ACCOUNT" calendar delete \
-      "$ASSISTANT_CALENDAR_ID" \
-      "$1" \
-      --force \
-      --no-input \
-      --json
+    gcal delete "$1"
     ;;
 
   notes-append)

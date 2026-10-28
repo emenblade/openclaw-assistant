@@ -6,17 +6,18 @@ A private, self-hosted personal assistant container:
 - Discord bot for text and notifications
 - OpenClaw Android/Wear OS app for voice/Talk
 - Gmail IMAP/SMTP via Himalaya
-- Google Calendar via gog
+- Google Calendar via a **service-account JSON key**
 - Obsidian notes
 - OpenCode Zen models
 - WireGuard-only networking
 - No Docker socket, no privileged mode
+- No OAuth browser flow and no `gog` keyring
 
-This repo is designed for the user's Unraid NAS and Galaxy S25 + Galaxy Watch 7.
+Designed for the user's Unraid NAS and Galaxy S25 + Galaxy Watch 7.
 
 ## Why OpenClaw
 
-OpenClaw has the only official Android + Wear OS experience with a watch Tile/Talk and on-device speech. Hermes Agent is a strong alternative for memory/self-improvement, but it has no official Wear OS Tile/Talk equivalent. See the docs in the shared planning folder for the full comparison.
+OpenClaw has the only official Android + Wear OS experience with a watch Tile/Talk and on-device speech. Hermes Agent is a strong alternative for memory/self-improvement, but it has no official Wear OS Tile/Talk equivalent.
 
 ## Requirements
 
@@ -24,10 +25,9 @@ OpenClaw has the only official Android + Wear OS experience with a watch Tile/Ta
 - WireGuard access to the NAS
 - 32 GB RAM is plenty; this container is capped at 1 GB RAM / 2 CPUs
 - Dedicated Google account
-- Google Cloud project with Calendar API and a Desktop OAuth client
+- Google Cloud project with Calendar API and a **service account**
 - Discord bot application (new bot, not an existing Red bot token)
 - OpenCode Zen API key
-- Optional primary model override (`PRIMARY_MODEL`; default `opencode/claude-haiku-5-5`)
 - Obsidian vault path
 
 ## Model selection
@@ -39,29 +39,77 @@ The default is `opencode/claude-haiku-5-5`. You can set `PRIMARY_MODEL` in the t
 - `opencode/glm-5.3-flash` (paid, cheap)
 - `opencode/gpt-6-luna` (paid, cheap)
 
-Avoid `*-free` models for unattended automation. OpenClaw is not the OpenCode client, and free-tier routes may return `403 FreeTierError`. If you change the model after first boot, run:
+Avoid `*-free` models for unattended automation. OpenClaw is not the OpenCode client, and free-tier routes may return `403 FreeTierError`.
+
+If you change the model after first boot, use the OpenClaw Control UI or:
 
 ```bash
 docker exec -it openclaw-assistant openclaw config set agents.defaults.model.primary "opencode/..."
 docker restart openclaw-assistant
 ```
 
+## Google setup: service account, not OAuth
+
+This build does **not** use an OAuth client secret or a gog keyring. It uses a Google Cloud service-account key.
+
+### 1. Create the service account
+
+1. Open <https://console.cloud.google.com/>.
+2. Create/select a project.
+3. Enable **Google Calendar API**.
+4. Go to **IAM & Admin → Service Accounts**.
+5. Create a service account, e.g. `openclaw-calendar`.
+6. Create a key: **Keys → Add key → Create new key → JSON**.
+7. Download the JSON file.
+
+The file must contain:
+
+```json
+{
+  "type": "service_account",
+  "client_email": "...iam.gserviceaccount.com",
+  "private_key": "..."
+}
+```
+
+An OAuth client `client_secret.json` will **not** work. It must say `"type": "service_account"`.
+
+### 2. Put the key in appdata
+
+Copy the JSON to:
+
+```text
+/mnt/cache/appdata/openclaw-assistant/google/service-account.json
+```
+
+This is a plain file in the container's data directory. You do not need to create anything inside the container.
+
+### 3. Share the calendar with the service account
+
+1. Open Google Calendar as the assistant account.
+2. Open the `Assistant` calendar settings.
+3. Share it with the service account email from the JSON (`client_email`).
+4. Permission: **Make changes to events**.
+5. Optionally share your main calendar with the same service-account email as **See all event details**.
+
+No browser OAuth step is needed later.
+
 ## Quick start
 
-### 1. Build the image
+### 1. Use the published image
 
-On the Unraid NAS:
+```text
+ghcr.io/emenblade/openclaw-assistant:latest
+```
+
+It is public. You do not need to build anything.
+
+If you prefer building locally:
 
 ```bash
 git clone https://github.com/emenblade/openclaw-assistant.git
 cd openclaw-assistant
 docker build -t openclaw-assistant:local .
-```
-
-Or use the published GHCR image after the GitHub Actions workflow runs:
-
-```text
-ghcr.io/emenblade/openclaw-assistant:latest
 ```
 
 ### 2. Prepare appdata
@@ -72,13 +120,9 @@ chown -R 1000:1000 /mnt/cache/appdata/openclaw-assistant
 chmod 700 /mnt/cache/appdata/openclaw-assistant
 ```
 
-Put your Google Desktop OAuth `client_secret.json` in:
+Put `service-account.json` in that `google` folder.
 
-```text
-/mnt/cache/appdata/openclaw-assistant/google/client_secret.json
-```
-
-### 3. Install with Unraid template
+### 3. Install with the Unraid template
 
 Copy the template:
 
@@ -86,13 +130,7 @@ Copy the template:
 cp unraid-template.xml /boot/config/plugins/dockerMan/templates-user/openclaw-assistant.xml
 ```
 
-If you built locally, edit the copied template and change:
-
-```xml
-<Repository>ghcr.io/emenblade/openclaw-assistant:latest</Repository>
-```
-
-to:
+If you built locally, change the copied template:
 
 ```xml
 <Repository>openclaw-assistant:local</Repository>
@@ -107,36 +145,41 @@ Fill in:
 - Google credentials folder
 - Gateway token (`openssl rand -hex 32`)
 - OpenCode Zen API key
-- Optional primary model override (`PRIMARY_MODEL`; default `opencode/claude-haiku-5-5`)
+- Primary model (default `opencode/claude-haiku-5-5`)
 - Discord bot token
 - Discord owner ID
 - Optional Discord guild/channel IDs
 - Assistant email
 - Gmail app password
 - Assistant calendar ID
-- gog keyring password
 - Timezone
 - Owner name
 - Assistant name
-- Quiet hours
+- City / work hours / quiet hours
 
 Leave **Privileged** off. Do not add `/var/run/docker.sock`.
 
-### 4. Check startup
+### 4. Start it
 
-```bash
-docker logs -f openclaw-assistant
-```
+Use the Unraid Docker UI. On first boot the entrypoint:
 
-On first boot the entrypoint:
-
-- Creates `/home/node/.openclaw`
+- Creates all internal directories
 - Renders `openclaw.json` from env
-- Copies starter prompts into the workspace
+- Seeds the prompts
 - Renders the Himalaya Gmail config
 - Installs the official Discord plugin
 - Adds the scoped `assistant-mail` executable to the exec allowlist
+- Checks Google Calendar access with the service account
 - Starts the Gateway
+
+View logs in the Unraid Docker UI. Look for:
+
+```text
+Google Calendar access OK.
+Starting OpenClaw Gateway...
+```
+
+If calendar access fails, the calendar was not shared with the service-account email.
 
 ### 5. Open the Control UI
 
@@ -148,37 +191,7 @@ http://UNRAID-IP:18789
 
 Paste the Gateway token.
 
-### 6. Headless Google OAuth
-
-The container is headless, so use gog's remote/manual flow.
-
-```bash
-docker exec -it openclaw-assistant gog auth credentials /home/node/google/client_secret.json
-docker exec -it openclaw-assistant gog auth keyring file
-docker exec -it openclaw-assistant gog auth add assistant.you@gmail.com --services calendar --remote --step 1
-```
-
-Open the printed URL in a browser on your phone or laptop. Approve the Calendar scope. The final `localhost` redirect page may fail to load; copy the full URL from the browser address bar.
-
-Then exchange it:
-
-```bash
-docker exec -it openclaw-assistant gog auth add assistant.you@gmail.com \
-  --services calendar \
-  --remote --step 2 \
-  --auth-url 'PASTE_FULL_REDIRECT_URL_HERE'
-```
-
-Verify:
-
-```bash
-docker exec -it openclaw-assistant gog auth list
-docker exec -it openclaw-assistant gog calendar list
-```
-
-> Google OAuth apps in Testing mode issue refresh tokens that expire after 7 days. In Google Cloud, publish the app to **Production** (an "unverified app" warning is acceptable for personal use) or use a service account instead.
-
-### 7. Pair the phone and watch
+### 6. Pair the phone and watch
 
 1. Install **OpenClaw** from Google Play (`ai.openclaw.app`).
 2. In the Control UI, go to **Devices → Pair device**.
@@ -190,45 +203,16 @@ docker exec -it openclaw-assistant gog calendar list
 
 The watch uses the paired phone's connection. The phone must be nearby and connected to the NAS over WireGuard.
 
-### 8. Test Discord
+### 7. Test from chat
 
-Send a DM to the new bot:
+No terminal commands are required. In Discord or the OpenClaw app:
 
 ```text
 hello
-```
-
-If it does not reply:
-
-```bash
-docker exec -it openclaw-assistant openclaw channels status --probe
-docker exec -it openclaw-assistant openclaw pairing list discord
-```
-
-Approve the first pairing if needed:
-
-```bash
-docker exec -it openclaw-assistant openclaw pairing approve discord <CODE>
-```
-
-### 9. Test calendar and notes
-
-```bash
-docker exec -it openclaw-assistant assistant-mail calendar-list \
-  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  "$(date -u -d '+7 days' +%Y-%m-%dT%H:%M:%SZ)"
-```
-
-Create a test event:
-
-```bash
-docker exec -it openclaw-assistant sh -lc 'gog calendar create "$ASSISTANT_CALENDAR_ID" --summary "OpenClaw test" --from 2026-11-01T15:00:00Z --to 2026-11-01T15:30:00Z --description "Created by setup test"' 
-```
-
-Then ask the assistant in Discord:
-
-```text
-Note that the plumber quoted $450 and can come Tuesday.
+what is on my calendar today?
+create a 30-minute test event tomorrow at 3 PM
+note that the plumber quoted $450 and can come Tuesday
+what did I say about the plumber?
 ```
 
 Check the Obsidian `Assistant/Inbox` folder.
@@ -255,13 +239,13 @@ Do not expose this container directly to the internet.
 - Only the scoped `assistant-mail` command is allowlisted for the agent.
 - No email send/delete/move wrapper command.
 - Discord DM allowlist.
-- Google Calendar scope only.
+- Google Calendar access is limited to calendars shared with the service account.
 - Gmail app password limited to the dedicated assistant account.
 - Do not put secrets in Git.
 
 ## Updating
 
-Pin a version after the pilot. For now:
+Pin a version after the pilot. Update through the Unraid Docker UI or:
 
 ```bash
 docker pull ghcr.io/emenblade/openclaw-assistant:latest
@@ -274,13 +258,24 @@ Back up appdata before updating. OpenClaw moves quickly; use `extended-stable` o
 
 ### Container restarts or Gateway does not start
 
+Use the Unraid Docker UI logs. If you want the CLI:
+
 ```bash
-docker logs --tail 200 openclaw-assistant
 docker exec -it openclaw-assistant openclaw doctor
 docker exec -it openclaw-assistant openclaw config validate
 ```
 
+### Google Calendar access failed
+
+- Confirm `/mnt/cache/appdata/openclaw-assistant/google/service-account.json` exists.
+- Confirm it says `"type": "service_account"`.
+- Confirm the Assistant calendar is shared with the `client_email` from that JSON as **Make changes to events**.
+- Confirm the Calendar ID in the template matches the Assistant calendar.
+- Restart the container.
+
 ### Discord plugin install failed
+
+Open the Unraid Docker console or run:
 
 ```bash
 docker exec -it openclaw-assistant openclaw plugins install @openclaw/discord
@@ -289,11 +284,7 @@ docker restart openclaw-assistant
 
 ### Gmail auth fails
 
-Check the app password and that 2FA/app passwords are enabled:
-
-```bash
-docker exec -it openclaw-assistant himalaya envelope list --account assistant
-```
+Check the app password and that 2FA/app passwords are enabled. The container generates the Himalaya config on first boot.
 
 ### Permission denied on appdata
 
@@ -310,10 +301,6 @@ The vault is mounted at:
 ```
 
 Confirm the host path is writable by UID 1000 and contains the `Assistant` folder.
-
-### Calendar OAuth expired
-
-If the app was in Testing mode, re-authorize or publish the app to Production. Testing-mode refresh tokens expire after 7 days.
 
 ## Known limitations
 

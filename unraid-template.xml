@@ -9,7 +9,7 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/emenblade/openclaw-assistant/issues</Support>
   <Project>https://github.com/emenblade/openclaw-assistant</Project>
-  <Overview>Private OpenClaw assistant for Unraid. Discord for text/notifications; OpenClaw Android/Wear OS app for voice; Gmail IMAP and Google Calendar via gog; Obsidian notes. Intended for access over WireGuard. No Docker socket, no privileged mode.</Overview>
+  <Overview>Private OpenClaw assistant for Unraid. Discord for text/notifications; OpenClaw Android/Wear OS app for voice; Gmail IMAP and Google Calendar via a service-account key; Obsidian notes. Intended for access over WireGuard. No Docker socket, no privileged mode.</Overview>
   <Category>AI: Tools:</Category>
   <WebUI>http://[IP]:[PORT:18789]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/emenblade/openclaw-assistant/main/unraid-template.xml</TemplateURL>
@@ -20,13 +20,13 @@
   <DateInstalled/>
   <DonateText/>
   <DonateLink/>
-  <Requires>Dedicated Google account and Gmail app password; Google Calendar API/OAuth client; Discord bot application; OpenCode Zen API key. Appdata must be on the cache pool or a direct disk, not /mnt/user. Do not add the Docker socket.</Requires>
+  <Requires>Dedicated Google account and Gmail app password; Google Calendar API service-account JSON key shared into the Assistant calendar; Discord bot application; OpenCode Zen API key. Appdata must be on the cache pool or a direct disk, not /mnt/user. Do not add the Docker socket.</Requires>
 
   <Config Name="Appdata" Target="/home/node/.openclaw" Default="/mnt/cache/appdata/openclaw-assistant" Mode="rw" Description="OpenClaw state, SQLite, memory, credentials. Use cache pool/direct disk, not /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant</Config>
 
   <Config Name="Obsidian Vault" Target="/home/node/.openclaw/workspace/obsidian" Default="/mnt/user/Obsidian/YourVault" Mode="rw" Description="Select your Obsidian vault root. The assistant writes under the Assistant subfolder. Must be writable by UID 1000." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/Obsidian/YourVault</Config>
 
-  <Config Name="Google Credentials" Target="/home/node/google" Default="/mnt/cache/appdata/openclaw-assistant/google" Mode="ro" Description="Folder containing client_secret.json from a Google Desktop OAuth client. Mounted read-only." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant/google</Config>
+  <Config Name="Google Credentials" Target="/home/node/google" Default="/mnt/cache/appdata/openclaw-assistant/google" Mode="ro" Description="Folder containing service-account.json downloaded from a Google Cloud service account. Mounted read-only." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant/google</Config>
 
   <Config Name="Gateway Token" Target="OPENCLAW_GATEWAY_TOKEN" Default="" Mode="" Description="Long random token. Generate with: openssl rand -hex 32" Type="Variable" Display="always" Required="true" Mask="true"></Config>
 
@@ -47,7 +47,6 @@
 
   <Config Name="Assistant Calendar ID" Target="ASSISTANT_CALENDAR_ID" Default="" Mode="" Description="Google Calendar ID, e.g. abc123@group.calendar.google.com." Type="Variable" Display="always" Required="true" Mask="false"></Config>
 
-  <Config Name="Gog Keyring Password" Target="GOG_KEYRING_PASSWORD" Default="" Mode="" Description="Password for gog's file keyring. Store in your password manager." Type="Variable" Display="always" Required="true" Mask="true"></Config>
 
   <Config Name="Timezone" Target="TZ" Default="America/Toronto" Mode="" Description="IANA timezone." Type="Variable" Display="always" Required="true" Mask="false">America/Toronto</Config>
 
