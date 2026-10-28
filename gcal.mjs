@@ -20,7 +20,7 @@ const SA_PATH =
   "/home/node/google/service-account.json";
 const CALENDAR_ID = process.env.ASSISTANT_CALENDAR_ID || "";
 const SCOPE = "https://www.googleapis.com/auth/calendar";
-const API = "https://www.googleapis.com/calendar/v3";
+const API = process.env.GCAL_API_BASE || "https://www.googleapis.com/calendar/v3";
 
 function fail(message, code = 1) {
   console.error(JSON.stringify({ ok: false, error: message }));
