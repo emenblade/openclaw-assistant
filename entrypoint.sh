@@ -33,6 +33,13 @@ export OBSIDIAN_SUBDIR="${OBSIDIAN_SUBDIR:-Assistant}"
 if [ "$(id -u)" = "0" ]; then
   echo "[entrypoint] fixing ownership for ${PUID}:${PGID}"
 
+  # Ensure a passwd entry exists for the target UID so Node tools that call
+  # os.userInfo() do not fail on an unknown numeric UID.
+  if ! getent passwd "$PUID" >/dev/null 2>&1; then
+    groupadd -g "$PGID" openclaw 2>/dev/null || true
+    useradd -u "$PUID" -g "$PGID" -M -d "$HOME" -s /usr/sbin/nologin openclaw 2>/dev/null || true
+  fi
+
   mkdir -p \
     "$STATE_DIR" \
     "$STATE_DIR/auth-profile-secrets" \

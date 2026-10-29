@@ -30,6 +30,7 @@ RUN set -eux; \
       ffmpeg \
       gzip \
       jq \
+      passwd \
       ripgrep \
       tar \
       util-linux; \
