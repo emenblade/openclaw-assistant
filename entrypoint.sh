@@ -12,7 +12,10 @@ CONFIG_PATH="${OPENCLAW_CONFIG_PATH:-$STATE_DIR/openclaw.json}"
 WORKSPACE="${OPENCLAW_WORKSPACE_DIR:-$STATE_DIR/workspace}"
 OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-$WORKSPACE/obsidian}"
 HIMALAYA_CONFIG="${HIMALAYA_CONFIG:-$STATE_DIR/himalaya/config.toml}"
-SERVICE_ACCOUNT_JSON="${GOOGLE_SERVICE_ACCOUNT_JSON:-/home/node/google/service-account.json}"
+SERVICE_ACCOUNT_JSON="${GOOGLE_SERVICE_ACCOUNT_JSON:-$STATE_DIR/google/service-account.json}"
+PUID="${PUID:-99}"
+PGID="${PGID:-100}"
+export PUID PGID
 
 # Values consumed by the seeded prompts.
 export TIMEZONE="${TZ:-UTC}"
@@ -23,16 +26,35 @@ export OWNER_NAME="${OWNER_NAME:-Owner}"
 export ASSISTANT_NAME="${ASSISTANT_NAME:-Assistant}"
 export OBSIDIAN_SUBDIR="${OBSIDIAN_SUBDIR:-Assistant}"
 
-mkdir -p \
-  "$STATE_DIR" \
-  "$STATE_DIR/auth-profile-secrets" \
-  "$STATE_DIR/cache" \
-  "$STATE_DIR/npm-cache" \
-  "$STATE_DIR/himalaya" \
-  "$WORKSPACE" \
-  "$OBSIDIAN_ROOT/Assistant/Inbox" \
-  "$OBSIDIAN_ROOT/Assistant/Daily" \
-  "$OBSIDIAN_ROOT/Assistant/Topics"
+# First-boot permission fix:
+# - Start as root only to create/chown the appdata tree.
+# - Do NOT chown the whole Obsidian vault; only the Assistant folder.
+# - Drop to PUID/PGID before running the agent so all writes are consistent.
+if [ "$(id -u)" = "0" ]; then
+  echo "[entrypoint] fixing ownership for ${PUID}:${PGID}"
+
+  mkdir -p \
+    "$STATE_DIR" \
+    "$STATE_DIR/auth-profile-secrets" \
+    "$STATE_DIR/cache" \
+    "$STATE_DIR/google" \
+    "$STATE_DIR/himalaya" \
+    "$STATE_DIR/npm-cache" \
+    "$HOME" \
+    "$WORKSPACE" \
+    "$OBSIDIAN_ROOT/Assistant/Inbox" \
+    "$OBSIDIAN_ROOT/Assistant/Daily" \
+    "$OBSIDIAN_ROOT/Assistant/Topics"
+
+  chown -R "$PUID:$PGID" "$STATE_DIR"
+  chown -R "$PUID:$PGID" "$OBSIDIAN_ROOT/Assistant"
+
+  echo "[entrypoint] dropping to ${PUID}:${PGID}"
+  exec setpriv --reuid="$PUID" --regid="$PGID" --clear-groups \
+    /usr/local/bin/assistant-entrypoint.sh
+fi
+
+# Non-root path. Directories already exist and are owned by PUID/PGID.
 
 # --- Discord plugin -----------------------------------------------------------
 DISCORD_ENABLED=false
@@ -86,7 +108,7 @@ if [ -f "$SERVICE_ACCOUNT_JSON" ] && [ -n "${ASSISTANT_CALENDAR_ID:-}" ]; then
   else
     echo "[entrypoint] WARNING: Google Calendar check failed. Confirm the calendar is shared with the service-account email." >&2
   fi
-elif [ -f /home/node/google/client_secret.json ]; then
+elif [ -f "$STATE_DIR/google/client_secret.json" ]; then
   echo "[entrypoint] WARNING: client_secret.json is an OAuth client, not a service-account key. This build expects service-account.json." >&2
 else
   echo "[entrypoint] WARNING: Google service-account JSON not found at $SERVICE_ACCOUNT_JSON." >&2

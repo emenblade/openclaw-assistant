@@ -9,7 +9,7 @@ set -euo pipefail
 : "${ASSISTANT_CALENDAR_ID:?ASSISTANT_CALENDAR_ID is required}"
 : "${ASSISTANT_EMAIL:?ASSISTANT_EMAIL is required}"
 HIMALAYA_ACCOUNT="${HIMALAYA_ACCOUNT:-assistant}"
-OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-/home/node/.openclaw/workspace/obsidian}"
+OBSIDIAN_ROOT="${OBSIDIAN_ROOT:-/home/node/obsidian}"
 OBSIDIAN_SUBDIR="${OBSIDIAN_SUBDIR:-Assistant}"
 
 usage() {

@@ -3,7 +3,7 @@
 // No OAuth browser flow, no gog keyring, no external npm dependencies.
 //
 // Env:
-//   GOOGLE_SERVICE_ACCOUNT_JSON  default /home/node/google/service-account.json
+//   GOOGLE_SERVICE_ACCOUNT_JSON  default /home/node/.openclaw/google/service-account.json
 //   ASSISTANT_CALENDAR_ID        required
 //   TZ                           fallback timezone
 //
@@ -17,7 +17,7 @@ import fs from "node:fs";
 
 const SA_PATH =
   process.env.GOOGLE_SERVICE_ACCOUNT_JSON ||
-  "/home/node/google/service-account.json";
+  "/home/node/.openclaw/google/service-account.json";
 const CALENDAR_ID = process.env.ASSISTANT_CALENDAR_ID || "";
 const SCOPE = "https://www.googleapis.com/auth/calendar";
 const API = process.env.GCAL_API_BASE || "https://www.googleapis.com/calendar/v3";

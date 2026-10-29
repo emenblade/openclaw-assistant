@@ -5,7 +5,6 @@ services:
     image: ${OPENCLAW_IMAGE:-openclaw-assistant:local}
     container_name: openclaw-assistant
     init: true
-    user: "1000:1000"
     env_file:
       - .env
     environment:
@@ -17,17 +16,24 @@ services:
       QUIET_HOURS: ${QUIET_HOURS:-22:00-07:00}
       OBSIDIAN_SUBDIR: ${OBSIDIAN_SUBDIR:-Assistant}
       PRIMARY_MODEL: ${PRIMARY_MODEL:-opencode/claude-haiku-5-5}
+      PUID: ${PUID:-99}
+      PGID: ${PGID:-100}
       CITY: ${CITY:-}
       WORK_HOURS: ${WORK_HOURS:-09:00-17:00}
     volumes:
       - ${OPENCLAW_APPDATA:-/mnt/cache/appdata/openclaw-assistant}:/home/node/.openclaw
-      - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/.openclaw/workspace/obsidian
-      - ${GOOGLE_CREDENTIALS_DIR:-./google}:/home/node/google:ro
+      - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/obsidian
     ports:
       - "18789:18789"
     restart: unless-stopped
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     security_opt:
       - no-new-privileges:true
     pids_limit: 256
@@ -47,7 +53,7 @@ services:
       - cli
     network_mode: "service:openclaw"
     init: true
-    user: "1000:1000"
+    user: "${PUID:-99}:${PGID:-100}"
     env_file:
       - .env
     environment:
@@ -61,8 +67,7 @@ services:
       WORK_HOURS: ${WORK_HOURS:-09:00-17:00}
     volumes:
       - ${OPENCLAW_APPDATA:-/mnt/cache/appdata/openclaw-assistant}:/home/node/.openclaw
-      - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/.openclaw/workspace/obsidian
-      - ${GOOGLE_CREDENTIALS_DIR:-./google}:/home/node/google:ro
+      - ${OBSIDIAN_HOST_PATH:-/mnt/user/Obsidian/YourVault}:/home/node/obsidian
     entrypoint: ["node", "dist/index.js"]
     stdin_open: true
     tty: true

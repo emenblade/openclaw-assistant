@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Container version="2">
-  <Name>openclaw-assistant</Name>
+  <Name>OpenClaw-Butler</Name>
   <Repository>ghcr.io/emenblade/openclaw-assistant:latest</Repository>
   <Registry>https://github.com/emenblade/openclaw-assistant/pkgs/container/openclaw-assistant</Registry>
   <Network>bridge</Network>
@@ -12,9 +12,9 @@
   <Overview>Private OpenClaw assistant for Unraid. Discord for text/notifications; OpenClaw Android/Wear OS app for voice; Gmail IMAP and Google Calendar via a service-account key; Obsidian notes. Intended for access over WireGuard. No Docker socket, no privileged mode.</Overview>
   <Category>AI: Tools:</Category>
   <WebUI>http://[IP]:[PORT:18789]</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/emenblade/openclaw-assistant/main/unraid-template.xml</TemplateURL>
+  <TemplateURL>https://raw.githubusercontent.com/emenblade/openclaw-assistant/main/OpenClaw-Butler.xml</TemplateURL>
   <Icon>https://openclaw.ai/favicon.ico</Icon>
-  <ExtraParams>--init --user=1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true --pids-limit=256 --memory=1g --cpus=2 --tmpfs=/tmp --log-opt max-size=10m --log-opt max-file=3</ExtraParams>
+  <ExtraParams>--init --cap-drop=ALL --cap-add=CHOWN --cap-add=DAC_OVERRIDE --cap-add=FOWNER --cap-add=SETGID --cap-add=SETUID --security-opt=no-new-privileges:true --pids-limit=256 --memory=1g --cpus=2 --tmpfs=/tmp --log-opt max-size=10m --log-opt max-file=3</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
@@ -22,11 +22,14 @@
   <DonateLink/>
   <Requires>Dedicated Google account and Gmail app password; Google Calendar API service-account JSON key shared into the Assistant calendar; Discord bot application; OpenCode Zen API key. Appdata must be on the cache pool or a direct disk, not /mnt/user. Do not add the Docker socket.</Requires>
 
-  <Config Name="Appdata" Target="/home/node/.openclaw" Default="/mnt/cache/appdata/openclaw-assistant" Mode="rw" Description="OpenClaw state, SQLite, memory, credentials. Use cache pool/direct disk, not /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant</Config>
+  <Config Name="Appdata" Target="/home/node/.openclaw" Default="/mnt/cache/appdata/openclaw-assistant" Mode="rw" Description="OpenClaw state, SQLite, memory, config, and google/service-account.json. Use cache pool/direct disk, not /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant</Config>
 
-  <Config Name="Obsidian Vault" Target="/home/node/.openclaw/workspace/obsidian" Default="/mnt/user/Obsidian/YourVault" Mode="rw" Description="Select your Obsidian vault root. The assistant writes under the Assistant subfolder. Must be writable by UID 1000." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/Obsidian/YourVault</Config>
+  <Config Name="Obsidian Vault" Target="/home/node/obsidian" Default="/mnt/user/Obsidian/YourVault" Mode="rw" Description="Select your Obsidian vault root. The assistant writes under the Assistant subfolder; only that subfolder is chowned to PUID/PGID." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/Obsidian/YourVault</Config>
 
-  <Config Name="Google Credentials" Target="/home/node/google" Default="/mnt/cache/appdata/openclaw-assistant/google" Mode="ro" Description="Folder containing service-account.json downloaded from a Google Cloud service account. Mounted read-only." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/openclaw-assistant/google</Config>
+
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="Container user ID. Unraid default is 99 (nobody). The entrypoint chowns appdata to this and drops privileges." Type="Variable" Display="always" Required="true" Mask="false">99</Config>
+
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Container group ID. Unraid default is 100 (users)." Type="Variable" Display="always" Required="true" Mask="false">100</Config>
 
   <Config Name="Gateway Token" Target="OPENCLAW_GATEWAY_TOKEN" Default="" Mode="" Description="Long random token. Generate with: openssl rand -hex 32" Type="Variable" Display="always" Required="true" Mask="true"></Config>
 

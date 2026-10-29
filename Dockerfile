@@ -31,7 +31,8 @@ RUN set -eux; \
       gzip \
       jq \
       ripgrep \
-      tar; \
+      tar \
+      util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # Himalaya (IMAP/SMTP)
@@ -72,8 +73,8 @@ RUN chmod 0755 \
       chmod 0755 /usr/local/bin/openclaw; \
     fi
 
-ENV HOME=/home/node \
-    OPENCLAW_HOME=/home/node \
+ENV HOME=/home/node/.openclaw/home \
+    OPENCLAW_HOME=/home/node/.openclaw/home \
     OPENCLAW_STATE_DIR=/home/node/.openclaw \
     OPENCLAW_CONFIG_DIR=/home/node/.openclaw \
     OPENCLAW_CONFIG_PATH=/home/node/.openclaw/openclaw.json \
@@ -82,15 +83,18 @@ ENV HOME=/home/node \
     OPENCLAW_GATEWAY_PORT=18789 \
     OPENCLAW_GATEWAY_BIND=lan \
     OPENCLAW_DISABLE_BONJOUR=1 \
-    GOOGLE_SERVICE_ACCOUNT_JSON=/home/node/google/service-account.json \
+    GOOGLE_SERVICE_ACCOUNT_JSON=/home/node/.openclaw/google/service-account.json \
     HIMALAYA_CONFIG=/home/node/.openclaw/himalaya/config.toml \
-    OBSIDIAN_ROOT=/home/node/.openclaw/workspace/obsidian \
+    OBSIDIAN_ROOT=/home/node/obsidian \
+    XDG_CONFIG_HOME=/home/node/.openclaw/home/.config \
+    XDG_DATA_HOME=/home/node/.openclaw/home/.local/share \
+    XDG_STATE_HOME=/home/node/.openclaw/home/.local/state \
     XDG_CACHE_HOME=/home/node/.openclaw/cache \
     NPM_CONFIG_CACHE=/home/node/.openclaw/npm-cache \
     PATH=/home/node/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 EXPOSE 18789
 
-USER node
+USER root
 
 ENTRYPOINT ["/usr/local/bin/assistant-entrypoint.sh"]

@@ -112,22 +112,24 @@ cd openclaw-assistant
 docker build -t openclaw-assistant:local .
 ```
 
-### 2. Prepare appdata
+### 2. Appdata and service account
 
-```bash
-mkdir -p /mnt/cache/appdata/openclaw-assistant/google
-chown -R 1000:1000 /mnt/cache/appdata/openclaw-assistant
-chmod 700 /mnt/cache/appdata/openclaw-assistant
+You do **not** need to chown anything on the host. The container starts as root only long enough to create/chown the appdata tree to `PUID:PGID` (default `99:100`), then drops privileges.
+
+Install the container first. It creates:
+
+```text
+/mnt/cache/appdata/openclaw-assistant/google/
 ```
 
-Put `service-account.json` in that `google` folder.
+Then put `service-account.json` in that folder and restart the container.
 
 ### 3. Install with the Unraid template
 
 Copy the template:
 
 ```bash
-cp unraid-template.xml /boot/config/plugins/dockerMan/templates-user/openclaw-assistant.xml
+cp OpenClaw-Butler.xml /boot/config/plugins/dockerMan/templates-user/OpenClaw-Butler.xml
 ```
 
 If you built locally, change the copied template:
@@ -142,7 +144,7 @@ Fill in:
 
 - Appdata path
 - Obsidian vault root path
-- Google credentials folder
+- PUID/PGID (leave `99`/`100` for Unraid unless your shares use different ownership)
 - Gateway token (`openssl rand -hex 32`)
 - OpenCode Zen API key
 - Primary model (default `opencode/claude-haiku-5-5`)
@@ -231,8 +233,9 @@ Do not expose this container directly to the internet.
 
 ## Security
 
-- Runs as UID/GID 1000, not root.
-- `cap_drop: ALL`
+- Starts as root only to chown appdata, then drops to `PUID:PGID` (default `99:100`).
+- Chowns only appdata and the Obsidian `Assistant` folder, not the whole vault.
+- `cap_drop: ALL` plus only the capabilities needed for the drop (`CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETUID`, `SETGID`).
 - `no-new-privileges`
 - No Docker socket.
 - No host networking.
@@ -288,19 +291,17 @@ Check the app password and that 2FA/app passwords are enabled. The container gen
 
 ### Permission denied on appdata
 
-```bash
-chown -R 1000:1000 /mnt/cache/appdata/openclaw-assistant
-```
+The container handles appdata ownership on startup. Confirm the host path is mapped to `/home/node/.openclaw` and that `PUID`/`PGID` match your Unraid shares (`99`/`100` by default).
 
 ### Obsidian notes not visible
 
 The vault is mounted at:
 
 ```text
-/home/node/.openclaw/workspace/obsidian
+/home/node/obsidian
 ```
 
-Confirm the host path is writable by UID 1000 and contains the `Assistant` folder.
+The entrypoint creates and chowns only `Assistant/`. Confirm the host path is readable by `PUID`/`PGID`; the assistant writes under `Assistant/`.
 
 ## Known limitations
 
