@@ -44,8 +44,8 @@ Avoid `*-free` models for unattended automation. OpenClaw is not the OpenCode cl
 If you change the model after first boot, use the OpenClaw Control UI or:
 
 ```bash
-docker exec -it openclaw-assistant openclaw config set agents.defaults.model.primary "opencode/..."
-docker restart openclaw-assistant
+docker exec -it OpenClaw-Butler openclaw config set agents.defaults.model.primary "opencode/..."
+docker restart OpenClaw-Butler
 ```
 
 ## Google setup: service account, not OAuth
@@ -138,7 +138,7 @@ If you built locally, change the copied template:
 <Repository>openclaw-assistant:local</Repository>
 ```
 
-Then in Unraid: **Docker → Add Container → openclaw-assistant**.
+Then in Unraid: **Docker → Add Container → OpenClaw-Butler**.
 
 Fill in:
 
@@ -255,6 +255,8 @@ docker pull ghcr.io/emenblade/openclaw-assistant:latest
 docker compose up -d
 ```
 
+If using Compose instead of Unraid, the service is `openclaw` and the container name is `OpenClaw-Butler`.
+
 Back up appdata before updating. OpenClaw moves quickly; use `extended-stable` or a pinned tag after the pilot.
 
 ## Troubleshooting
@@ -264,8 +266,8 @@ Back up appdata before updating. OpenClaw moves quickly; use `extended-stable` o
 Use the Unraid Docker UI logs. If you want the CLI:
 
 ```bash
-docker exec -it openclaw-assistant openclaw doctor
-docker exec -it openclaw-assistant openclaw config validate
+docker exec -it OpenClaw-Butler openclaw doctor
+docker exec -it OpenClaw-Butler openclaw config validate
 ```
 
 ### Google Calendar access failed
@@ -281,8 +283,8 @@ docker exec -it openclaw-assistant openclaw config validate
 Open the Unraid Docker console or run:
 
 ```bash
-docker exec -it openclaw-assistant openclaw plugins install @openclaw/discord
-docker restart openclaw-assistant
+docker exec -it OpenClaw-Butler openclaw plugins install @openclaw/discord
+docker restart OpenClaw-Butler
 ```
 
 ### Gmail auth fails
